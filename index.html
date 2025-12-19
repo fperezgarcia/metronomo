@@ -2,95 +2,187 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Estructura musical por BPM</title>
+  <title>Metrónomo Musical</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
-    body {
+    /* ---------- RESET Y TIPOGRAFÍA ---------- */
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      color: #333;
     }
 
+    /* ---------- CONTROLES ---------- */
     .controls {
       padding: 15px;
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      border-radius: 10px;
+      margin: 10px;
     }
 
-    .controls input {
-      margin-right: 10px;
-      padding: 5px;
-      width: 100px;
+    .controls input,
+    .controls select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .controls input:focus,
+    .controls select:focus {
+      outline: none;
+      border-color: #4caf50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);
     }
 
     .controls button {
-      padding: 6px 12px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      background: #4caf50;
+      color: white;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .controls button:hover {
+      background: #45a049;
+      transform: scale(1.03);
+    }
+
+    .toggle {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .toggle:hover {
+      background: #d5d5d5;
     }
 
     .sections {
-      margin-top: 10px;
-    }
-
-    .section-item {
       font-size: 14px;
-      margin-top: 4px;
+      display: none;
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .sections.show {
+      display: block;
+    }
+    .section-item {
+      margin: 6px 0;
     }
 
+    .countin {
+      background-color: #e74c3c !important; /* rojo */
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+    }
+
+    /* ---------- CÍRCULOS ---------- */
     .container {
       flex: 1;
       display: flex;
-      justify-content: space-around;
+      justify-content: space-evenly;
       align-items: center;
+      padding: 15px;
     }
-
     .circle {
-      width: 15vw;
-      height: 15vw;
-      max-width: 140px;
-      max-height: 140px;
+      width: clamp(60px, 18vw, 140px);
+      height: clamp(60px, 18vw, 140px);
       border-radius: 50%;
       background-color: #ccc;
-      transition: background-color 0.15s;
+      transition: background-color 0.15s, transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-
     .active {
       background-color: #4caf50;
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
     }
 
+    /* ---------- ESTADO ---------- */
     .status {
       text-align: center;
       padding: 25px;
-      font-size: 42px;
-      font-weight: bold;
-      background: #fff;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      font-weight: 600;
+      background: #ffffff;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      font-size: clamp(28px, 6vw, 48px);
+      border-radius: 0 0 10px 10px;
+      margin: 0 10px 10px 10px;
     }
+
+    /* ---------- DESKTOP ---------- */
+    @media (min-width: 768px) {
+      .controls {
+        grid-template-columns: repeat(4, 1fr);
+        align-items: end;
+      }
+      .sections {
+        grid-column: span 4;
+      }
+      .toggle {
+        grid-column: span 4;
+      }
+    }
+
+
   </style>
 </head>
 <body>
 
   <div class="controls">
+
     <div>
-      BPM:
-      <input type="number" id="bpm" value="60" min="1">
+      BPM
+      <input type="number" id="bpm" value="120" min="1">
     </div>
 
-    <div style="margin-top:10px;">
-      Sección:
+    <div></div><div></div><div></div>
+
+    <div>
+      Section
       <input type="text" id="sectionName" placeholder="Intro">
-      Compases:
-      <input type="number" id="sectionBars" min="1" placeholder="4">
-      <button onclick="addSection()">Añadir</button>
     </div>
 
-    <div class="sections" id="sectionsList"></div>
-
-    <div style="margin-top:10px;">
-      <button onclick="start()">Start</button>
+    <div>
+      Compasses
+      <input type="number" id="sectionBars" min="1" placeholder="8">
     </div>
+
+    <button onclick="addSection()">Add</button>
+    <div></div>
+    <button class="full" onclick="toggleSections()">Show/Hide Structure</button>
+
+    <div class="sections full" id="sectionsList"></div>
+    
+    <div class="full">
+      Start from
+      <select id="startSection"></select>
+    </div>
+
+    <button class="full" onclick="start()">Start</button>
+
   </div>
 
   <div class="container">
@@ -107,24 +199,25 @@
   const bpmInput = document.getElementById('bpm');
   const status = document.getElementById('status');
   const sectionsList = document.getElementById('sectionsList');
+  const startSelect = document.getElementById('startSection');
 
   let sections = [];
   let intervalId;
 
-  let beat = 1;       // 1..4
+  let beat = 1;
   let bar = 1;
   let sectionIndex = 0;
 
   function addSection() {
     const name = sectionName.value.trim();
     const bars = Number(sectionBars.value);
-
     if (!name || bars < 1) return;
 
     sections.push({ name, bars });
     sectionName.value = '';
     sectionBars.value = '';
     renderSections();
+    renderSelect();
   }
 
   function renderSections() {
@@ -137,36 +230,62 @@
     });
   }
 
+  function renderSelect() {
+    startSelect.innerHTML = '';
+    sections.forEach((s, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${i + 1}. ${s.name}`;
+      startSelect.appendChild(opt);
+    });
+  }
+
+  function toggleSections() {
+    sectionsList.classList.toggle('show');
+  }
+
   function start() {
-    if (sections.length === 0) return;
+    if (!sections.length) return;
 
     clearInterval(intervalId);
 
+    sectionIndex = Number(startSelect.value) || 0;
     beat = 1;
     bar = 1;
-    sectionIndex = 0;
 
     const intervalMs = 60000 / Number(bpmInput.value);
-    intervalId = setInterval(tick, intervalMs);
+
+    // -------- Count-in --------
+    let countInBeat = 1;
+    const countInInterval = setInterval(() => {
+      circles.forEach(c => c.classList.remove('countin', 'active'));
+      circles[countInBeat - 1].classList.add('countin');
+
+      if (countInBeat === 4) {
+        // Último beat, limpiar e iniciar canción
+        setTimeout(() => {
+          circles.forEach(c => c.classList.remove('countin'));
+          intervalId = setInterval(tick, intervalMs);
+        }, intervalMs);
+        clearInterval(countInInterval);
+      } else {
+        countInBeat++;
+      }
+    }, intervalMs);
   }
 
   function tick() {
-    // Iluminar beat actual
     circles.forEach(c => c.classList.remove('active'));
     circles[beat - 1].classList.add('active');
 
     const currentSection = sections[sectionIndex];
     status.textContent = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
 
-    // Avanzar beat
     beat++;
-
-    // Fin de compás (después del beat 4)
     if (beat === 5) {
       beat = 1;
       bar++;
 
-      // Fin de sección
       if (bar > currentSection.bars) {
         sectionIndex++;
         bar = 1;
