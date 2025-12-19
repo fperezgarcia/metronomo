@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estructura musical por BPM</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .controls {
+      padding: 15px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .controls input {
+      margin-right: 10px;
+      padding: 5px;
+      width: 100px;
+    }
+
+    .controls button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .sections {
+      margin-top: 10px;
+    }
+
+    .section-item {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .circle {
+      width: 15vw;
+      height: 15vw;
+      max-width: 140px;
+      max-height: 140px;
+      border-radius: 50%;
+      background-color: #ccc;
+      transition: background-color 0.15s;
+    }
+
+    .active {
+      background-color: #4caf50;
+    }
+
+    .status {
+      text-align: center;
+      padding: 25px;
+      font-size: 42px;
+      font-weight: bold;
+      background: #fff;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <div>
+      BPM:
+      <input type="number" id="bpm" value="60" min="1">
+    </div>
+
+    <div style="margin-top:10px;">
+      Sección:
+      <input type="text" id="sectionName" placeholder="Intro">
+      Compases:
+      <input type="number" id="sectionBars" min="1" placeholder="4">
+      <button onclick="addSection()">Añadir</button>
+    </div>
+
+    <div class="sections" id="sectionsList"></div>
+
+    <div style="margin-top:10px;">
+      <button onclick="start()">Start</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+  </div>
+
+  <div class="status" id="status">—</div>
+
+<script>
+  const circles = document.querySelectorAll('.circle');
+  const bpmInput = document.getElementById('bpm');
+  const status = document.getElementById('status');
+  const sectionsList = document.getElementById('sectionsList');
+
+  let sections = [];
+  let intervalId;
+
+  let beat = 1;       // 1..4
+  let bar = 1;
+  let sectionIndex = 0;
+
+  function addSection() {
+    const name = sectionName.value.trim();
+    const bars = Number(sectionBars.value);
+
+    if (!name || bars < 1) return;
+
+    sections.push({ name, bars });
+    sectionName.value = '';
+    sectionBars.value = '';
+    renderSections();
+  }
+
+  function renderSections() {
+    sectionsList.innerHTML = '';
+    sections.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'section-item';
+      div.textContent = `${i + 1}. ${s.name} – ${s.bars} compases`;
+      sectionsList.appendChild(div);
+    });
+  }
+
+  function start() {
+    if (sections.length === 0) return;
+
+    clearInterval(intervalId);
+
+    beat = 1;
+    bar = 1;
+    sectionIndex = 0;
+
+    const intervalMs = 60000 / Number(bpmInput.value);
+    intervalId = setInterval(tick, intervalMs);
+  }
+
+  function tick() {
+    // Iluminar beat actual
+    circles.forEach(c => c.classList.remove('active'));
+    circles[beat - 1].classList.add('active');
+
+    const currentSection = sections[sectionIndex];
+    status.textContent = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
+
+    // Avanzar beat
+    beat++;
+
+    // Fin de compás (después del beat 4)
+    if (beat === 5) {
+      beat = 1;
+      bar++;
+
+      // Fin de sección
+      if (bar > currentSection.bars) {
+        sectionIndex++;
+        bar = 1;
+
+        if (sectionIndex >= sections.length) {
+          clearInterval(intervalId);
+          status.textContent = 'FIN';
+        }
+      }
+    }
+  }
+</script>
+
+</body>
+</html>
