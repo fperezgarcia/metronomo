@@ -98,6 +98,16 @@
       box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
     }
 
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-y: auto; /* permite scroll en todo el contenido si no cabe */
+    }
+    .container {
+      flex: 1 0 auto;
+    }
+
     /* ---------- CÍRCULOS ---------- */
     .container {
       flex: 1;
@@ -150,154 +160,154 @@
   </style>
 </head>
 <body>
+  <div class="wrapper">
+    <div class="controls">
 
-  <div class="controls">
+      <div>
+        BPM
+        <input type="number" id="bpm" value="120" min="1">
+      </div>
 
-    <div>
-      BPM
-      <input type="number" id="bpm" value="120" min="1">
+      <div></div><div></div><div></div>
+
+      <div>
+        Section
+        <input type="text" id="sectionName" placeholder="Intro">
+      </div>
+
+      <div>
+        Compasses
+        <input type="number" id="sectionBars" min="1" placeholder="8">
+      </div>
+
+      <button onclick="addSection()">Add</button>
+      <div></div>
+      <button class="full" onclick="toggleSections()">Show/Hide Structure</button>
+
+      <div class="sections full" id="sectionsList"></div>
+      
+      <div class="full">
+        Start from
+        <select id="startSection"></select>
+      </div>
+
+      <button class="full" onclick="start()">Start</button>
+
     </div>
 
-    <div></div><div></div><div></div>
-
-    <div>
-      Section
-      <input type="text" id="sectionName" placeholder="Intro">
+    <div class="container">
+      <div class="circle"></div>
+      <div class="circle"></div>
+      <div class="circle"></div>
+      <div class="circle"></div>
     </div>
 
-    <div>
-      Compasses
-      <input type="number" id="sectionBars" min="1" placeholder="8">
-    </div>
+    <div class="status" id="status">—</div>
 
-    <button onclick="addSection()">Add</button>
-    <div></div>
-    <button class="full" onclick="toggleSections()">Show/Hide Structure</button>
+    <script>
+      const circles = document.querySelectorAll('.circle');
+      const bpmInput = document.getElementById('bpm');
+      const status = document.getElementById('status');
+      const sectionsList = document.getElementById('sectionsList');
+      const startSelect = document.getElementById('startSection');
 
-    <div class="sections full" id="sectionsList"></div>
-    
-    <div class="full">
-      Start from
-      <select id="startSection"></select>
-    </div>
+      let sections = [];
+      let intervalId;
 
-    <button class="full" onclick="start()">Start</button>
+      let beat = 1;
+      let bar = 1;
+      let sectionIndex = 0;
 
-  </div>
+      function addSection() {
+        const name = sectionName.value.trim();
+        const bars = Number(sectionBars.value);
+        if (!name || bars < 1) return;
 
-  <div class="container">
-    <div class="circle"></div>
-    <div class="circle"></div>
-    <div class="circle"></div>
-    <div class="circle"></div>
-  </div>
-
-  <div class="status" id="status">—</div>
-
-<script>
-  const circles = document.querySelectorAll('.circle');
-  const bpmInput = document.getElementById('bpm');
-  const status = document.getElementById('status');
-  const sectionsList = document.getElementById('sectionsList');
-  const startSelect = document.getElementById('startSection');
-
-  let sections = [];
-  let intervalId;
-
-  let beat = 1;
-  let bar = 1;
-  let sectionIndex = 0;
-
-  function addSection() {
-    const name = sectionName.value.trim();
-    const bars = Number(sectionBars.value);
-    if (!name || bars < 1) return;
-
-    sections.push({ name, bars });
-    sectionName.value = '';
-    sectionBars.value = '';
-    renderSections();
-    renderSelect();
-  }
-
-  function renderSections() {
-    sectionsList.innerHTML = '';
-    sections.forEach((s, i) => {
-      const div = document.createElement('div');
-      div.className = 'section-item';
-      div.textContent = `${i + 1}. ${s.name} – ${s.bars} compases`;
-      sectionsList.appendChild(div);
-    });
-  }
-
-  function renderSelect() {
-    startSelect.innerHTML = '';
-    sections.forEach((s, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = `${i + 1}. ${s.name}`;
-      startSelect.appendChild(opt);
-    });
-  }
-
-  function toggleSections() {
-    sectionsList.classList.toggle('show');
-  }
-
-  function start() {
-    if (!sections.length) return;
-
-    clearInterval(intervalId);
-
-    sectionIndex = Number(startSelect.value) || 0;
-    beat = 1;
-    bar = 1;
-
-    const intervalMs = 60000 / Number(bpmInput.value);
-
-    // -------- Count-in --------
-    let countInBeat = 1;
-    const countInInterval = setInterval(() => {
-      circles.forEach(c => c.classList.remove('countin', 'active'));
-      circles[countInBeat - 1].classList.add('countin');
-
-      if (countInBeat === 4) {
-        // Último beat, limpiar e iniciar canción
-        setTimeout(() => {
-          circles.forEach(c => c.classList.remove('countin'));
-          intervalId = setInterval(tick, intervalMs);
-        }, intervalMs);
-        clearInterval(countInInterval);
-      } else {
-        countInBeat++;
+        sections.push({ name, bars });
+        sectionName.value = '';
+        sectionBars.value = '';
+        renderSections();
+        renderSelect();
       }
-    }, intervalMs);
-  }
 
-  function tick() {
-    circles.forEach(c => c.classList.remove('active'));
-    circles[beat - 1].classList.add('active');
+      function renderSections() {
+        sectionsList.innerHTML = '';
+        sections.forEach((s, i) => {
+          const div = document.createElement('div');
+          div.className = 'section-item';
+          div.textContent = `${i + 1}. ${s.name} – ${s.bars} compases`;
+          sectionsList.appendChild(div);
+        });
+      }
 
-    const currentSection = sections[sectionIndex];
-    status.textContent = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
+      function renderSelect() {
+        startSelect.innerHTML = '';
+        sections.forEach((s, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = `${i + 1}. ${s.name}`;
+          startSelect.appendChild(opt);
+        });
+      }
 
-    beat++;
-    if (beat === 5) {
-      beat = 1;
-      bar++;
+      function toggleSections() {
+        sectionsList.classList.toggle('show');
+      }
 
-      if (bar > currentSection.bars) {
-        sectionIndex++;
+      function start() {
+        if (!sections.length) return;
+
+        clearInterval(intervalId);
+
+        sectionIndex = Number(startSelect.value) || 0;
+        beat = 1;
         bar = 1;
 
-        if (sectionIndex >= sections.length) {
-          clearInterval(intervalId);
-          status.textContent = 'FIN';
+        const intervalMs = 60000 / Number(bpmInput.value);
+
+        // -------- Count-in --------
+        let countInBeat = 1;
+        const countInInterval = setInterval(() => {
+          circles.forEach(c => c.classList.remove('countin', 'active'));
+          circles[countInBeat - 1].classList.add('countin');
+
+          if (countInBeat === 4) {
+            // Último beat, limpiar e iniciar canción
+            setTimeout(() => {
+              circles.forEach(c => c.classList.remove('countin'));
+              intervalId = setInterval(tick, intervalMs);
+            }, intervalMs);
+            clearInterval(countInInterval);
+          } else {
+            countInBeat++;
+          }
+        }, intervalMs);
+      }
+
+      function tick() {
+        circles.forEach(c => c.classList.remove('active'));
+        circles[beat - 1].classList.add('active');
+
+        const currentSection = sections[sectionIndex];
+        status.textContent = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
+
+        beat++;
+        if (beat === 5) {
+          beat = 1;
+          bar++;
+
+          if (bar > currentSection.bars) {
+            sectionIndex++;
+            bar = 1;
+
+            if (sectionIndex >= sections.length) {
+              clearInterval(intervalId);
+              status.textContent = 'FIN';
+            }
+          }
         }
       }
-    }
-  }
-</script>
-
+    </script>
+  </div>
 </body>
 </html>
