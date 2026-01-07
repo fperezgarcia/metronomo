@@ -52,6 +52,7 @@
     }
 
     .controls button {
+      height: fit-content;
       padding: 12px;
       font-weight: 600;
       font-size: 16px;
@@ -108,6 +109,16 @@
       flex: 1 0 auto;
     }
 
+    .stop {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .stop:hover {
+      background: #c0392b;
+      transform: scale(1.03);
+    }
+
     /* ---------- CÍRCULOS ---------- */
     .container {
       flex: 1;
@@ -142,16 +153,122 @@
       margin: 0 10px 10px 10px;
     }
 
+    /* ---------- SONIDO ---------- */
+    .sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .sound-toggle label {
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .sound-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    .start-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .bpm-row {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    
+    .structure-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .show-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    /* ---------- MODAL ---------- */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .modal-content h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .modal-content textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .modal-buttons button {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+    .error-message {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
+
     /* ---------- DESKTOP ---------- */
     @media (min-width: 768px) {
-      .controls {
-        grid-template-columns: repeat(4, 1fr);
-        align-items: end;
-      }
-      .sections {
+      .bpm-row {
         grid-column: span 4;
       }
-      .toggle {
+      .structure-row {
+        grid-column: span 4;
+      }
+      .show-row {
+        grid-column: span 3;
+      }
+      .start-row {
         grid-column: span 4;
       }
     }
@@ -163,35 +280,48 @@
   <div class="wrapper">
     <div class="controls">
 
-      <div>
+      <div class="bpm-row">
         BPM
         <input type="number" id="bpm" value="120" min="1">
       </div>
 
-      <div></div><div></div><div></div>
+      <div class="structure-row">
 
-      <div>
-        Section
-        <input type="text" id="sectionName" placeholder="Intro">
-      </div>
+        <div>
+          Section
+          <input type="text" id="sectionName" placeholder="Intro">
+        </div>
 
-      <div>
-        Compasses
-        <input type="number" id="sectionBars" min="1" placeholder="8">
-      </div>
+        <div>
+          Compasses
+          <input type="number" id="sectionBars" min="1" placeholder="8">
+        </div>
 
-      <button onclick="addSection()">Add</button>
-      <div></div>
-      <button class="full" onclick="toggleSections()">Show/Hide Structure</button>
-
-      <div class="sections full" id="sectionsList"></div>
+        <button onclick="addSection()">Add</button>
+        <button onclick="showImportModal()">Import JSON</button>
       
-      <div class="full">
-        Start from
-        <select id="startSection"></select>
       </div>
 
-      <button class="full" onclick="start()">Start</button>
+      <div class="show-row">
+        <button onclick="toggleSections()">Show/Hide Structure</button>
+
+        <div class="sections full" id="sectionsList"></div>
+        
+        <div class="full">
+          Start from
+          <select id="startSection"></select>
+        </div>
+      </div>
+
+      <div class="start-row">
+        <button class="start" onclick="start()">Start</button>
+        <button class="stop" onclick="stop()">Stop</button>
+
+        <div class="sound-toggle">
+          <input type="checkbox" id="soundToggle" checked>
+          <label for="soundToggle">Sonido</label>
+        </div>
+      </div>
 
     </div>
 
@@ -204,12 +334,39 @@
 
     <div class="status" id="status">—</div>
 
+    <!-- Modal para importar JSON -->
+    <div class="modal" id="importModal">
+      <div class="modal-content">
+        <h2>Importar estructura JSON</h2>
+        <textarea id="jsonInput" style="color:black; background:white;">
+{
+  "bpm": 120,
+  "sections": [
+    {"intro": 8},
+    {"verse": 16},
+    {"chorus": 16},
+    {"outro": 4}
+  ]
+}
+        </textarea>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="modal-buttons">
+          <button class="toggle" onclick="closeImportModal()">Cancelar</button>
+          <button onclick="importJSON()">Importar</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const circles = document.querySelectorAll('.circle');
       const bpmInput = document.getElementById('bpm');
       const status = document.getElementById('status');
       const sectionsList = document.getElementById('sectionsList');
       const startSelect = document.getElementById('startSection');
+      const soundToggle = document.getElementById('soundToggle');
+      const importModal = document.getElementById('importModal');
+      const jsonInput = document.getElementById('jsonInput');
+      const errorMessage = document.getElementById('errorMessage');
 
       let sections = [];
       let intervalId;
@@ -217,6 +374,40 @@
       let beat = 1;
       let bar = 1;
       let sectionIndex = 0;
+      let audioContext = null;
+
+      // Inicializar AudioContext
+      function initAudio() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      // Reproducir sonido de tick
+      function playTick(isFirstBeat) {
+        if (!soundToggle.checked || !audioContext) return;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Primer beat tiene frecuencia más alta y diferente
+        if (isFirstBeat) {
+          oscillator.frequency.value = 1200;
+          gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        } else {
+          oscillator.frequency.value = 800;
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        }
+
+        oscillator.type = 'sine';
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.08);
+      }
 
       function addSection() {
         const name = sectionName.value.trim();
@@ -254,8 +445,65 @@
         sectionsList.classList.toggle('show');
       }
 
+      function showImportModal() {
+        importModal.classList.add('show');
+        errorMessage.classList.remove('show');
+      }
+
+      function closeImportModal() {
+        importModal.classList.remove('show');
+      }
+
+      function importJSON() {
+        try {
+          const data = JSON.parse(jsonInput.value);
+          
+          // Validar estructura
+          if (!data.bpm || !Array.isArray(data.sections)) {
+            throw new Error('Formato incorrecto. Debe tener "bpm" y "sections" como array.');
+          }
+
+          // Limpiar secciones actuales
+          sections = [];
+
+          // Actualizar BPM
+          bpmInput.value = data.bpm;
+
+          // Añadir secciones
+          data.sections.forEach(sectionObj => {
+            const name = Object.keys(sectionObj)[0];
+            const bars = sectionObj[name];
+            
+            if (!name || typeof bars !== 'number' || bars < 1) {
+              throw new Error(`Sección inválida: ${JSON.stringify(sectionObj)}`);
+            }
+            
+            sections.push({ name, bars });
+          });
+
+          renderSections();
+          renderSelect();
+          closeImportModal();
+          
+        } catch (error) {
+          errorMessage.textContent = 'Error: ' + error.message;
+          errorMessage.classList.add('show');
+        }
+      }
+
+      // Cerrar modal al hacer clic fuera
+      importModal.addEventListener('click', (e) => {
+        if (e.target === importModal) {
+          closeImportModal();
+        }
+      });
+
       function start() {
+        stop();
         if (!sections.length) return;
+
+        // Inicializar audio al presionar Start
+        initAudio();
 
         clearInterval(intervalId);
 
@@ -267,29 +515,62 @@
 
         // -------- Count-in --------
         let countInBeat = 1;
+        
+        // Primer beat del count-in inmediato
+        circles[0].classList.add('countin');
+        playTick(true);
+        countInBeat++;
+        
         const countInInterval = setInterval(() => {
           circles.forEach(c => c.classList.remove('countin', 'active'));
-          circles[countInBeat - 1].classList.add('countin');
-
-          if (countInBeat === 4) {
-            // Último beat, limpiar e iniciar canción
-            setTimeout(() => {
-              circles.forEach(c => c.classList.remove('countin'));
-              intervalId = setInterval(tick, intervalMs);
-            }, intervalMs);
-            clearInterval(countInInterval);
-          } else {
+          
+          if (countInBeat <= 4) {
+            circles[countInBeat - 1].classList.add('countin');
+            playTick(true);
             countInBeat++;
+          } else {
+            // Terminar count-in e iniciar canción inmediatamente
+            clearInterval(countInInterval);
+            circles.forEach(c => c.classList.remove('countin'));
+            tick(); // Ejecutar primer tick inmediatamente
+            intervalId = setInterval(tick, intervalMs);
           }
         }, intervalMs);
+      }
+
+      function stop() {
+        // Detener intervalos
+        clearInterval(intervalId);
+
+        // Resetear estado visual
+        circles.forEach(c => c.classList.remove('active', 'countin'));
+
+        // Resetear variables
+        beat = 1;
+        bar = 1;
+        sectionIndex = 0;
+
+        // Actualizar estado
+        status.textContent = '—';
       }
 
       function tick() {
         circles.forEach(c => c.classList.remove('active'));
         circles[beat - 1].classList.add('active');
 
+        // Reproducir sonido (diferente para el primer beat)
+        playTick(beat === 1);
+
         const currentSection = sections[sectionIndex];
-        status.textContent = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
+        
+        // Mostrar siguiente sección en el último compás
+        let statusText = `${currentSection.name}: ${bar} / ${currentSection.bars}`;
+        if (bar === currentSection.bars && sectionIndex < sections.length - 1) {
+          const nextSection = sections[sectionIndex + 1];
+          statusText += ` → ${nextSection.name}`;
+        }
+        
+        status.textContent = statusText;
 
         beat++;
         if (beat === 5) {
