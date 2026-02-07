@@ -89,8 +89,31 @@
     .sections.show {
       display: block;
     }
-    .section-item {
-      margin: 6px 0;
+   
+    .section-item input[type="text"] {
+      padding: 4px 6px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .section-item button {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    .section-item button:hover {
+      background: #c0392b;
+    }
+
+    .section-item input[type="number"] {
+      width: 70px;
+      padding: 4px;
+      font-size: 14px;
     }
 
     .countin {
@@ -289,16 +312,26 @@
 
         <div>
           Section
-          <input type="text" id="sectionName" placeholder="Intro">
+          <select id="sectionName">
+            <option value="">— Select —</option>
+            <option>Intro</option>
+            <option>Verse</option>
+            <option>Chorus</option>
+            <option>Part</option>
+            <option>Solo</option>
+            <option>Instrumental</option>
+            <option>Silence</option>
+            <option>Outro</option>
+          </select>
         </div>
 
         <div>
-          Compasses
+          #Compass
           <input type="number" id="sectionBars" min="1" placeholder="8">
         </div>
 
         <button onclick="addSection()">Add</button>
-        <button onclick="showImportModal()">Import JSON</button>
+        <button onclick="showImportModal()">Import</button>
       
       </div>
 
@@ -319,7 +352,7 @@
 
         <div class="sound-toggle">
           <input type="checkbox" id="soundToggle" checked>
-          <label for="soundToggle">Sonido</label>
+          <label for="soundToggle">Sound</label>
         </div>
       </div>
 
@@ -352,7 +385,7 @@
         <div class="error-message" id="errorMessage"></div>
         <div class="modal-buttons">
           <button class="toggle" onclick="closeImportModal()">Cancelar</button>
-          <button onclick="importJSON()">Importar</button>
+          <button onclick="importJSON()">Import</button>
         </div>
       </div>
     </div>
@@ -412,33 +445,86 @@
       function addSection() {
         const name = sectionName.value.trim();
         const bars = Number(sectionBars.value);
+
         if (!name || bars < 1) return;
 
         sections.push({ name, bars });
+
         sectionName.value = '';
         sectionBars.value = '';
+
         renderSections();
         renderSelect();
       }
 
       function renderSections() {
         sectionsList.innerHTML = '';
+
         sections.forEach((s, i) => {
-          const div = document.createElement('div');
-          div.className = 'section-item';
-          div.textContent = `${i + 1}. ${s.name} – ${s.bars} compases`;
-          sectionsList.appendChild(div);
+          const row = document.createElement('div');
+          row.className = 'section-item';
+
+          // Número
+          const index = document.createElement('div');
+          index.textContent = `${i + 1}.`;
+
+          // Nombre editable
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.value = s.name;
+
+          nameInput.addEventListener('input', () => {
+            sections[i].name = nameInput.value.trim() || s.name;
+            renderSelect();
+          });
+
+          // Compases editables
+          const barsInput = document.createElement('input');
+          barsInput.type = 'number';
+          barsInput.min = 1;
+          barsInput.value = s.bars;
+
+          barsInput.addEventListener('change', () => {
+            const val = Number(barsInput.value);
+            if (val > 0) {
+              sections[i].bars = val;
+            } else {
+              barsInput.value = sections[i].bars;
+            }
+          });
+
+          // Botón eliminar
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '✕';
+          delBtn.title = 'Eliminar sección';
+          delBtn.onclick = () => {
+            sections.splice(i, 1);
+            renderSections();
+            renderSelect();
+          };
+
+          row.appendChild(index);
+          row.appendChild(nameInput);
+          row.appendChild(barsInput);
+          row.appendChild(delBtn);
+
+          sectionsList.appendChild(row);
         });
       }
 
       function renderSelect() {
         startSelect.innerHTML = '';
+
         sections.forEach((s, i) => {
           const opt = document.createElement('option');
           opt.value = i;
           opt.textContent = `${i + 1}. ${s.name}`;
           startSelect.appendChild(opt);
         });
+
+        if (startSelect.value >= sections.length) {
+          startSelect.value = 0;
+        }
       }
 
       function toggleSections() {
